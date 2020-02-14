@@ -7,6 +7,7 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	DSN "github.com/tohirov1994/database"
+	"log"
 	"testing"
 )
 
@@ -901,8 +902,44 @@ VALUES ('phone', 5000);`)
 }
 
 func ExampleATMsGet_WithoutData() {
-	db, _ := sql.Open(dbDriver, dbMemory)
-	result, _ := ATMsGet(db)
+	db, err := sql.Open(dbDriver, dbMemory)
+	if err != nil {
+		log.Fatalf("can't open db: %v", err)
+	}
+	_ = db.Close()
+	result, err := ATMsGet(db)
+	if err == nil {
+		log.Fatalf("just be err: %v", err)
+	}
+	fmt.Println(result)
+	//Output: []
+}
+
+func ExampleATMsGet_RowsError() {
+	db, err := sql.Open(dbDriver, dbMemory)
+	if err != nil {
+		log.Fatalf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Fatalf("can't close db: %v", err)
+		}
+	}()
+	_, err = db.Query(`
+CREATE TABLE IF NOT EXISTS atms
+(
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    city     TEXT NOT NULL,
+    district TEXT NOT NULL,
+    street   TEXT NOT NULL
+);`)
+	if err != nil {
+		log.Fatalf("can't creat ATM: %v", err)
+	}
+	result, err := ATMsGet(db)
+	if err == nil {
+		log.Fatalf("just be err: %v", err)
+	}
 	fmt.Println(result)
 	//Output: []
 }
@@ -927,8 +964,19 @@ ON CONFLICT DO NOTHING;`)
 }
 
 func ExampleCardsGet_WithoutData() {
-	db, _ := sql.Open(dbDriver, dbMemory)
-	result, _ := CardsGet(0, db)
+	db, err := sql.Open(dbDriver, dbMemory)
+	if err != nil {
+		log.Fatalf("can't open db: %v", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Fatalf("can't close db: %v", err)
+		}
+	}()
+	result, err := CardsGet(5, db)
+	if err == nil {
+		log.Fatalf("can't execute get card: %v", err)
+	}
 	fmt.Println(result)
 	//Output: []
 }
